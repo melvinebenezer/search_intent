@@ -63,6 +63,6 @@ if use_wandb:
     # Finish the WandB run
     wandb.finish()
 
-# Optional: Save the model
-import joblib
-joblib.dump(nb_classifier, 'naive_bayes_model.joblib')
+# # Optional: Save the model
+# import joblib
+# joblib.dump(nb_classifier, 'naive_bayes_model.joblib')
