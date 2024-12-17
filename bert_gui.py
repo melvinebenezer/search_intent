@@ -90,8 +90,29 @@ if uploaded_file is not None:
             })
 
         # Display results
-        st.write("## Results")
-        st.table(pd.DataFrame(results))
+        # Create and interact with the agent
+         # Create and interact with the agent
+        class SimpleAgent:
+            def __init__(self, results):
+                self.results = results
+
+            def handle_message(self, message):
+                if message.lower() == "results":
+                    return pd.DataFrame(self.results).to_html(index=False)
+                else:
+                    return "I can provide the results of the models. Type 'results' to see them."
+
+        agent = SimpleAgent(results)
+
+        st.write("## Chat with the Agent")
+        user_input = st.text_input("You: ")
+        if user_input:
+            response = agent.handle_message(user_input)
+            if response.startswith("<table"):
+                st.write("Agent:")
+                st.write(response, unsafe_allow_html=True)
+            else:
+                st.write(f"Agent: {response}")
 
 if __name__ == "__main__":
     # The Streamlit app is already running, so we don't need to call any run() method
