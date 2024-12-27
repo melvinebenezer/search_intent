@@ -5,3 +5,5 @@ torchvision
 transformers
 tqdm
 wandb
+streamlit
+dspy
