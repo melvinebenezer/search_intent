@@ -1,0 +1,18 @@
+Input fields (text, search, date, etc.)
+Buttons
+Select dropdowns
+Forms and their interactive elements
+
+
+--- Browser Actions ---
+Skyvern
+
+
+Action items:
+- Given a URL, find the all that can be done on the page
+- purpose of the page
+- analyse the list page and create the POM
+
+
+- Get keywrod ads.google keyword planning
+- feed to seranking and get intents

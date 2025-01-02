@@ -1,0 +1,4 @@
+Successfully processed: data/kw_csvs/export_research_in_suggestion_keywords_history_related_usd_2024-11_photographers-near-me.csv
+Successfully processed: data/kw_csvs/export_research_in_suggestion_keywords_history_related_usd_2024-11_photographers-near-me.csv
+Successfully processed: data/kw_csvs/export_research_in_suggestion_keywords_history_related_usd_2024-11_salon-near-me.csv
+Successfully processed: data/kw_csvs/export_research_in_suggestion_keywords_history_related_usd_2024-11_diagnostic-centre-near-me.csv

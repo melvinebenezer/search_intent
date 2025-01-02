@@ -71,9 +71,9 @@ class BasePage:
         ]
         
         # Add locators with descriptions
-        for name, locator_type, value, description in analysis.get('locators', []):
-            code.append(f"    # {description}")
-            code.append(f"    {name} = (By.{locator_type}, '{value}')")
+        for locator in analysis.get('locators', []):
+            code.append(f"    # {locator['description']}")
+            code.append(f"    {locator['name']} = (By.{locator['type']}, '{locator['value']}')")
         
         code.append("\n    def __init__(self, driver):")
         code.append("        super().__init__(driver)")
@@ -98,22 +98,10 @@ class BasePage:
         
         # Add methods
         for method in analysis.get('methods', []):
-            method_code = self._generate_method_code(method)
-            code.extend(method_code)
+            code.extend([
+                f"\n    def {method['name']}({method['parameters']}):",
+                f"        \"\"\"{method['description']}\"\"\"",
+                f"        {method['implementation'].replace(chr(10), chr(10) + '        ')}"
+            ])
         
-        return "\n".join(code)
-    
-    def _generate_method_code(self, method):
-        """Generates code for a single method"""
-        code = [
-            f"\n    def {method['name']}({method.get('parameters', 'self')}):",
-            f"        \"\"\"{method['description']}\"\"\"",
-        ]
-        
-        # Add method implementation if provided
-        if 'implementation' in method:
-            code.extend([f"        {line}" for line in method['implementation'].split('\n')])
-        else:
-            code.append("        pass")
-        
-        return code 
+        return "\n".join(code) 
