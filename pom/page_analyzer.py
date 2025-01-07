@@ -7,7 +7,30 @@ class PageAnalyzer:
     def __init__(self, model_name="llama2"):
         self.model_name = model_name
         self.ollama_endpoint = "http://localhost:11434/api/generate"
-        
+    
+    def analyse_page_purpose(self, html_content):
+        try:
+            # Create a focused prompt using the markdown content directly
+            prompt = f"""Analyze this markdown and describe its main purpose in sentences.
+            Dont try to extract any data from the links.
+            Focus on what actions users can perform and what service it provides.
+            
+            Page Content:
+            {html_content}
+            """
+            
+            # Query Ollama
+            response = self._query_ollama(prompt)
+            
+            # Clean and return the response
+            # Remove any markdown formatting or extra quotes
+            cleaned_response = response.strip('`"\' ')
+            return cleaned_response
+            
+        except Exception as e:
+            print(f"Error analyzing page purpose: {e}")
+            return "Could not determine page purpose due to an error."
+    
     def analyze_page(self, html_content):
         # Parse HTML and extract important interactive elements
         soup = BeautifulSoup(html_content, 'html.parser')
