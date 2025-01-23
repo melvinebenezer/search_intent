@@ -14,5 +14,5 @@ Action items:
 - analyse the list page and create the POM
 
 
-- Get keywrod ads.google keyword planning
+- Get keywords from ads.google keyword planning
 - feed to seranking and get intents

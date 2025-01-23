@@ -1,8 +1,15 @@
 import streamlit as st
 import asyncio
-from purpose import simple_crawl, get_activity_model
+from purpose import simple_crawl, get_activity_model, load_activities_map, save_activities_map
+import json
 
 st.set_page_config(layout="wide")
+
+# Load activities map at startup
+try:
+    activities_map = load_activities_map()
+except (FileNotFoundError, json.JSONDecodeError):
+    activities_map = {}
 
 async def get_activities(url):
     st.write("Debug: Starting URL processing...")
@@ -13,7 +20,16 @@ async def get_activities(url):
 
 async def process_single_activity(activity):
     st.write(f"Debug: Getting activity model for {activity['activity']}...")
+    # Check if activity is already in the map
+    if activity['activity'] in activities_map:
+        st.write("Loading activity model from cache...")
+        return activities_map[activity['activity']]
+    
     activity_map = await get_activity_model(activity)
+    if activity_map:
+        # Update the global activities map and save it
+        activities_map.update(activity_map)
+        save_activities_map(activities_map)
     st.write(f"Debug: Activity map received: {activity_map}")
     return activity_map
 
@@ -27,11 +43,41 @@ def display_pom(pom_data):
         st.write("No POM data available for this activity")
         return
     
-    st.write("### Page Object Model")
-    for element in pom_data.get('input_elements', []):
-        with st.expander(f"{element.get('label', 'Input Element')}"):
-            for key, value in element.items():
-                st.write(f"**{key}:** {value}")
+    st.write("### Activity Steps")
+    steps = pom_data.get('steps', [])
+    
+    if not steps:
+        st.write("No steps defined for this activity")
+        return
+        
+    for step in steps:
+        with st.expander(f"Step {step['step_number']}: {step['description']}"):
+            st.write(f"**URL:** {step['url']}")
+            st.write(f"**Requires User Input:** {'Yes' if step['step_lock'] else 'No'}")
+            
+            if step.get('input_elements'):
+                st.write("#### Input Elements:")
+                for element in step['input_elements']:
+                    # Create a container for each input element
+                    st.markdown(f"**{element.get('label', 'Input Element')}**")
+                    # Create a container with a border
+                    with st.container():
+                        st.markdown("---")  # Add a separator line
+                        cols = st.columns(2)  # Create two columns for key-value pairs
+                        items = [(k, v) for k, v in element.items() if k != 'label']
+                        mid = len(items) // 2
+                        
+                        # First column
+                        with cols[0]:
+                            for key, value in items[:mid]:
+                                st.markdown(f"**{key}:** {value}")
+                        
+                        # Second column
+                        with cols[1]:
+                            for key, value in items[mid:]:
+                                st.markdown(f"**{key}:** {value}")
+            else:
+                st.write("*No input elements for this step*")
 
 def main():
     # Create two columns
@@ -93,7 +139,8 @@ def main():
                     activities = asyncio.run(get_activities(url))
                     if activities:
                         st.session_state.activities = activities
-                        st.session_state.activities_map = {}  # Reset activities map
+                        # Don't reset activities_map completely, just update as needed
+                        st.session_state.activities_map = activities_map.copy()
                         st.session_state.current_view = 'initial'
                         st.success("Successfully identified activities!")
                     else:
@@ -111,7 +158,7 @@ def main():
             st.write(f"## Details for: {st.session_state.selected_activity}")
             activity_data = st.session_state.activities_map.get(st.session_state.selected_activity, {})
             if activity_data:
-                display_pom(activity_data.get(st.session_state.selected_activity))
+                display_pom(activity_data)
             else:
                 st.write("Loading activity details...")
 

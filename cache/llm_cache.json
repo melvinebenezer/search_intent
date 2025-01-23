@@ -1,0 +1,93 @@
+{
+  "purpose_1c09fbd6d97499612e5f6bcae03031e9": {
+    "timestamp": "2025-01-23T14:24:52.082639",
+    "response": {
+      "activities": [
+        {
+          "activity": "Bus Ticket Booking",
+          "url": "www.redbus.in/bus-tickets"
+        },
+        {
+          "activity": "Train Ticket Booking",
+          "url": "www.redbus.in/railways"
+        },
+        {
+          "activity": "Bus Operator Registration",
+          "url": "onboardvendor.redbus.in"
+        },
+        {
+          "activity": "Agent Registration",
+          "url": "in3.seatseller.travel"
+        },
+        {
+          "activity": "Bus Hire Services",
+          "url": "www.redbus.in/bushire"
+        },
+        {
+          "activity": "Cab Booking Services",
+          "url": "www.redbus.in/car-rental/cab-booking"
+        },
+        {
+          "activity": "Tempo Traveller Booking",
+          "url": "www.redbus.in/tempo-traveller"
+        }
+      ]
+    }
+  },
+  "pom_6a72f0c3e478b1ad2b22fac271ddd669": {
+    "timestamp": "2025-01-23T15:01:19.594220",
+    "response": {
+      "pom": {
+        "description": "Initial bus search and booking page",
+        "url": "www.redbus.in",
+        "step_lock": true,
+        "input_elements": [
+          {
+            "id": "src",
+            "class": "sc-bxivhb dsDRlf",
+            "type": "text",
+            "name": "source",
+            "placeholder": "",
+            "value": "",
+            "label": "From",
+            "sample_input": "Bangalore",
+            "description": "Enter source city"
+          },
+          {
+            "id": "dest",
+            "class": "sc-bxivhb dsDRlf",
+            "type": "text",
+            "name": "destination",
+            "placeholder": "",
+            "value": "",
+            "label": "To",
+            "sample_input": "Delhi",
+            "description": "Enter destination city"
+          },
+          {
+            "id": "onwardCal",
+            "class": "sc-fjdhpX elUAqf",
+            "type": "date",
+            "name": "date",
+            "placeholder": "",
+            "value": "",
+            "label": "Date",
+            "sample_input": "2025-02-01",
+            "description": "Select travel date"
+          },
+          {
+            "id": "search_button",
+            "class": "sc-cvbbAY gDXYez",
+            "type": "button",
+            "name": "search",
+            "placeholder": "",
+            "value": "SEARCH BUSES",
+            "label": "Search",
+            "sample_input": "SEARCH BUSES",
+            "description": "Search for available buses"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+    "Bus Ticket Booking": {
+        "steps": [
+            {
+                "step_number": 1,
+                "description": "Search for Available Buses",
+                "url": "www.redbus.in/bus-tickets",
+                "step_lock": true,
+                "input_elements": [
+                    {
+                        "id": "source_city",
+                        "class": "form-control location-input",
+                        "type": "text",
+                        "name": "source",
+                        "placeholder": "Enter Source City",
+                        "value": "",
+                        "label": "From",
+                        "description": "Starting point of your journey"
+                    },
+                    {
+                        "id": "destination_city",
+                        "class": "form-control location-input",
+                        "type": "text",
+                        "name": "destination",
+                        "placeholder": "Enter Destination City",
+                        "value": "",
+                        "label": "To",
+                        "description": "End point of your journey"
+                    },
+                    {
+                        "id": "travel_date",
+                        "class": "form-control date-picker",
+                        "type": "date",
+                        "name": "journey_date",
+                        "placeholder": "Select Date",
+                        "value": "",
+                        "label": "Date of Journey",
+                        "description": "Select your travel date"
+                    }
+                ]
+            },
+            {
+                "step_number": 2,
+                "description": "Select Bus and Seats",
+                "url": "www.redbus.in/bus-tickets/select-seats",
+                "step_lock": true,
+                "input_elements": [
+                    {
+                        "id": "seat_selection",
+                        "class": "seat-layout",
+                        "type": "select",
+                        "name": "seats",
+                        "label": "Select Seats",
+                        "description": "Choose your preferred seats from the layout"
+                    }
+                ]
+            },
+            {
+                "step_number": 3,
+                "description": "Enter Passenger Details",
+                "url": "www.redbus.in/bus-tickets/passenger-details",
+                "step_lock": true,
+                "input_elements": [
+                    {
+                        "id": "passenger_name",
+                        "class": "form-control passenger-details",
+                        "type": "text",
+                        "name": "name",
+                        "placeholder": "Enter Passenger Name",
+                        "value": "",
+                        "label": "Passenger Name",
+                        "description": "Full name of the passenger"
+                    },
+                    {
+                        "id": "passenger_age",
+                        "class": "form-control passenger-details",
+                        "type": "number",
+                        "name": "age",
+                        "placeholder": "Enter Age",
+                        "value": "",
+                        "label": "Age",
+                        "description": "Age of the passenger"
+                    }
+                ]
+            }
+        ]
+    },
+    "Bus Operator Registration": {
+        "steps": [],
+        "message": "No HTML content was provided to analyze the Bus Operator Registration steps. Please provide the HTML content to extract the page object model and registration steps."
+    },
+    "Agent Registration": {
+        "steps": []
+    }
+}

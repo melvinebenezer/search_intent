@@ -18,13 +18,15 @@ async def main():
         async with AsyncWebCrawler() as crawler:
             result = await crawler.arun(
                 url="https://www.redbus.in",
+                # url="https://www.lovesaranghae.com/",
                 max_depth=1  # Limit crawl depth to avoid too much data
             )
             
             # OpenAI
-            openai_strategy = LLMExtractionStrategy(provider="openai/gpt-4o", api_token=os.getenv("OPENAI_API_KEY"))
-            openai_result = await openai_strategy.extract("https://www.redbus.in")
-            openai_result.save_to_file("openai_result.md")
+            # openai_strategy = LLMExtractionStrategy(provider="openai/gpt-4o", api_token=os.getenv("OPENAI_API_KEY"))
+            # # openai_result = await openai_strategy.extract("https://www.redbus.in")
+            # openai_result = await openai_strategy.extract("https://lovesaranghae.com/")
+            # openai_result.save_to_file("openai_result.md")
             
             # Clean the markdown content
             cleaned_markdown = remove_linksINMarkdown(result.markdown)
