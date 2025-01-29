@@ -25,13 +25,15 @@ async def process_single_activity(activity):
         st.write("Loading activity model from cache...")
         return activities_map[activity['activity']]
     
-    activity_map = await get_activity_model(activity)
-    if activity_map:
-        # Update the global activities map and save it
-        activities_map.update(activity_map)
-        save_activities_map(activities_map)
-    st.write(f"Debug: Activity map received: {activity_map}")
-    return activity_map
+    # Get the activity model from the activities map
+    activity_name = activity['activity']
+    activity_model = get_activity_model(activity_name, activities_map)
+    
+    if activity_model:
+        # No need to update activities_map since we're getting data from it
+        st.write(f"Debug: Activity model retrieved: {activity_model}")
+        return activity_model
+    return None
 
 def display_activities(activities):
     st.write("### Identified Activities")

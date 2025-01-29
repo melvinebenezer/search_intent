@@ -7,6 +7,7 @@ import re
 import json
 import hashlib
 from datetime import datetime
+import traceback
 nest_asyncio.apply()
 
 load_dotenv()
@@ -200,6 +201,109 @@ def get_input_elements(html_content, activity, url):
 
     return cached_llm_call('pom', f"{activity}_{html_content}", llm_call, url)
 
+async def get_nested_input_elements(page, parent_selector):
+    """Extract input elements from within a parent element"""
+    nested_elements = []
+    
+    try:
+        # Wait for the parent element
+        parent = await page.wait_for_selector(parent_selector, timeout=2000)
+        if parent:
+            # Find all input elements within the parent
+            input_types = ['input', 'select', 'textarea', 'button']
+            for input_type in input_types:
+                elements = await parent.query_selector_all(input_type)
+                
+                for element in elements:
+                    # Get element properties
+                    properties = await element.evaluate("""element => {
+                        return {
+                            id: element.id,
+                            class: element.className,
+                            type: element.type || element.tagName.toLowerCase(),
+                            name: element.name,
+                            placeholder: element.placeholder,
+                            value: element.value,
+                            label: element.getAttribute('aria-label') || 
+                                  document.querySelector(`label[for="${element.id}"]`)?.textContent,
+                            description: element.getAttribute('aria-description')
+                        }
+                    }""")
+                    
+                    nested_elements.append({
+                        'id': properties['id'],
+                        'class': properties['class'],
+                        'type': properties['type'],
+                        'name': properties['name'],
+                        'placeholder': properties['placeholder'],
+                        'value': properties['value'],
+                        'label': properties['label'],
+                        'description': properties['description']
+                    })
+            
+            print(f"Found {len(nested_elements)} nested input elements in {parent_selector}")
+            
+    except Exception as e:
+        print(f"Error getting nested elements for {parent_selector}: {str(e)}")
+    
+    return nested_elements
+
+async def handle_calendar_input(page, selector, element):
+    """Special handler for RedBus-style calendar inputs"""
+    try:
+        # Click the calendar input
+        await page.click(selector)
+        print(f"Clicked calendar input {selector}")
+        
+        # Wait for the calendar container to appear
+        calendar_container = await page.wait_for_selector('.DatePicker__CalendarContainer-sc-1kf43k8-0', timeout=2000)
+        if calendar_container:
+            print(f"RedBus calendar detected for {selector}")
+            
+            # Get nested input elements from the calendar
+            calendar_elements = await get_nested_input_elements(page, '.DatePicker__CalendarContainer-sc-1kf43k8-0')
+            if calendar_elements:
+                print(f"Found calendar nested elements: {calendar_elements}")
+                # Add these to the element's metadata
+                element['nested_elements'] = calendar_elements
+            
+            # Wait for the current month's dates to be visible
+            await page.wait_for_selector('.DayTiles__CalendarDaysBlock-sc-1xum02u-0')
+            
+            # Find all date elements that are clickable (not disabled)
+            date_selector = '.DayTiles__CalendarDaysBlock-sc-1xum02u-0:not([disabled]) .DayTiles__CalendarDaysSpan-sc-1xum02u-1:not(.gigHYE)'
+            await page.wait_for_selector(date_selector)
+            
+            # Get all available dates
+            dates = await page.query_selector_all(date_selector)
+            
+            if dates:
+                # Click a date from the first week (index 3-6 should be safe)
+                target_date = dates[5]  # Using index 5 to get a date from first week
+                
+                # Get the date text for logging
+                date_text = await target_date.text_content()
+                print(f"Attempting to click date {date_text}")
+                
+                # Force click the date
+                await target_date.click(force=True)
+                
+                # Wait a moment to ensure the click registers
+                await page.wait_for_timeout(1000)
+                
+                # Verify the input field was updated
+                input_value = await page.evaluate(f'document.querySelector("{selector}").textContent')
+                print(f"Calendar input value after click: {input_value}")
+                
+                return True
+            else:
+                print("No available dates found in calendar")
+                
+    except Exception as e:
+        print(f"Error handling RedBus calendar for {selector}: {str(e)}")
+        print(f"Stack trace:", traceback.format_exc())
+    return False
+
 async def explore_steps(activity_name, initial_step):
     """
     Automatically explores steps by filling in forms and following redirects to discover the complete flow
@@ -242,17 +346,38 @@ async def explore_steps(activity_name, initial_step):
                                 # Handle different input types
                                 elif element['type'] == 'select':
                                     await page.click(selector)
-                                    await page.keyboard.press('ArrowDown')
-                                    await page.keyboard.press('Enter')
+                                    # Check for dropdown
+                                    dropdown = await page.wait_for_selector('.dropdown-menu, [role="listbox"]', timeout=2000)
+                                    if dropdown:
+                                        print(f"Dropdown detected for {selector}")
+                                        dropdown_elements = await get_nested_input_elements(page, '.dropdown-menu, [role="listbox"]')
+                                        if dropdown_elements:
+                                            element['nested_elements'] = dropdown_elements
+                                        await page.keyboard.press('ArrowDown')
+                                        await page.keyboard.press('Enter')
+                                    
                                 elif element['type'] == 'date':
-                                    value = element['sample_input']
-                                    await page.fill(selector, value)
-                                    await page.keyboard.press('Enter')
+                                    calendar_handled = await handle_calendar_input(page, selector, element)
+                                    if not calendar_handled:
+                                        # Fallback to regular date input
+                                        value = element['sample_input']
+                                        await page.fill(selector, value)
+                                        await page.keyboard.press('Enter')
+                                
                                 else:
-                                    value = element['sample_input']
-                                    await page.fill(selector, value)
+                                    # For text inputs, check for autocomplete/suggestion dropdowns
+                                    await page.fill(selector, element['sample_input'])
+                                    suggestion_box = await page.wait_for_selector('.autocomplete, .suggestions, [role="listbox"]', timeout=2000)
+                                    if suggestion_box:
+                                        print(f"Suggestion dropdown detected for {selector}")
+                                        await page.keyboard.press('ArrowDown')
+                                        await page.keyboard.press('Enter')
+
+                            except TimeoutError:
+                                # No modal/dropdown appeared, continue normally
+                                pass
                             except Exception as e:
-                                print(f"Error filling element {selector}: {str(e)}")
+                                print(f"Error handling input {selector}: {str(e)}")
                 
                 # Look for submit button in input_elements first
                 submit_button = None
@@ -280,22 +405,57 @@ async def explore_steps(activity_name, initial_step):
                 if submit_button:
                     # Get current URL before clicking
                     previous_url = page.url
+                    print(f"Current URL before click: {previous_url}")
                     
-                    # Click and wait for navigation
-                    await submit_button.click()
-                    await page.wait_for_load_state("networkidle")
-                    
-                    # If URL changed, we've found a new step
-                    if page.url != previous_url:
-                        # Extract POM for the new page
-                        html_content = await page.content()
-                        new_step_data = get_input_elements(html_content, activity_name)
+                    try:
+                        # Setup navigation listener
+                        async with page.expect_navigation(timeout=5000, wait_until="networkidle") as navigation_info:
+                            # Click the submit button
+                            await submit_button.click()
                         
-                        if new_step_data and isinstance(new_step_data, dict):
-                            new_step = new_step_data
-                            new_step['url'] = page.url.replace('https://', '')
-                            new_step['step_number'] = len(all_steps) + 1
-                            all_steps.append(new_step)
+                        # Get navigation result
+                        navigation = await navigation_info.value
+                        new_url = navigation.url if navigation else page.url
+                        print(f"Navigation detected to: {new_url}")
+                        
+                        # Additional wait for any dynamic content
+                        await page.wait_for_load_state("networkidle")
+                        
+                        # Double check final URL after everything settles
+                        final_url = page.url
+                        print(f"Final URL after navigation: {final_url}")
+                        
+                        # If any URL in the chain changed, we've found a new step
+                        if new_url != previous_url or final_url != previous_url:
+                            # Extract POM for the new page
+                            html_content = await page.content()
+                            new_step_data = get_input_elements(html_content, activity_name, url)
+                            
+                            if new_step_data and isinstance(new_step_data, dict):
+                                new_step = new_step_data
+                                new_step['url'] = final_url.replace('https://', '')
+                                new_step['step_number'] = len(all_steps) + 1
+                                print(f"Adding new step with URL: {new_step['url']}")
+                                all_steps.append(new_step)
+                            
+                    except TimeoutError:
+                        print("Navigation timeout - checking for dynamic content changes")
+                        # Check if the page content changed even if URL didn't
+                        await page.wait_for_timeout(2000)  # Give time for dynamic content
+                        if await page.evaluate("document.body.innerHTML") != previous_content:
+                            print("Page content changed without navigation")
+                            # Handle as new step even without URL change
+                            html_content = await page.content()
+                            new_step_data = get_input_elements(html_content, activity_name, url)
+                            if new_step_data and isinstance(new_step_data, dict):
+                                new_step = new_step_data
+                                new_step['url'] = page.url.replace('https://', '')
+                                new_step['step_number'] = len(all_steps) + 1
+                                print(f"Adding new step from dynamic content: {new_step['url']}")
+                                all_steps.append(new_step)
+                    
+                    except Exception as e:
+                        print(f"Navigation error: {str(e)}")
                 
                 current_step += 1
                 
@@ -414,6 +574,21 @@ def load_activities_map():
     with open('activities_map.json', 'r') as f:
         return json.load(f)
 
+def get_activity_model(activity_name: str, activities_map: dict) -> dict:
+    """
+    Retrieve the activity model for a specific activity from the activities map.
+    
+    Args:
+        activity_name (str): Name of the activity to retrieve
+        activities_map (dict): Dictionary containing all activity models
+        
+    Returns:
+        dict: Activity model containing steps and other information
+    """
+    if activity_name not in activities_map:
+        return {"steps": [], "message": f"Activity '{activity_name}' not found in activities map"}
+    
+    return activities_map[activity_name]
 
 if __name__ == "__main__":
     asyncio.run(test())

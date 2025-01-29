@@ -61,7 +61,7 @@
             "placeholder": "",
             "value": "",
             "label": "To",
-            "sample_input": "Delhi",
+            "sample_input": "Goa",
             "description": "Enter destination city"
           },
           {
@@ -85,6 +85,73 @@
             "label": "Search",
             "sample_input": "SEARCH BUSES",
             "description": "Search for available buses"
+          }
+        ]
+      }
+    }
+  },
+  "pom_672bfadf847cdb5622e5b81229d935da": {
+    "timestamp": "2025-01-29T05:59:31.181941",
+    "response": {
+      "pom": {
+        "description": "Bus ticket booking flow from Bangalore to Goa",
+        "url": "/bus-tickets/bangalore-to-goa",
+        "step_lock": true,
+        "input_elements": [
+          {
+            "id": "source",
+            "class": "src",
+            "type": "text",
+            "name": "source",
+            "placeholder": "FROM",
+            "value": "",
+            "label": "Source City",
+            "description": "Enter departure city",
+            "sample_input": "Bangalore"
+          },
+          {
+            "id": "destination",
+            "class": "dst",
+            "type": "text",
+            "name": "destination",
+            "placeholder": "TO",
+            "value": "",
+            "label": "Destination City",
+            "description": "Enter arrival city",
+            "sample_input": "Goa"
+          },
+          {
+            "id": "searchDat",
+            "class": "searchDate",
+            "type": "text",
+            "name": "date",
+            "placeholder": "DATE",
+            "value": "",
+            "label": "Travel Date",
+            "description": "Select journey date",
+            "sample_input": "30 Jan"
+          },
+          {
+            "id": "modify_search",
+            "class": "onward-modify-btn",
+            "type": "button",
+            "name": "modify",
+            "placeholder": "",
+            "value": "Modify",
+            "label": "Modify Search",
+            "description": "Button to modify search criteria",
+            "sample_input": "click"
+          },
+          {
+            "id": "view_seats",
+            "class": "view-seats",
+            "type": "button",
+            "name": "viewseats",
+            "placeholder": "",
+            "value": "View Seats",
+            "label": "View Seats",
+            "description": "Button to view available seats",
+            "sample_input": "click"
           }
         ]
       }
